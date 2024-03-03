@@ -441,6 +441,10 @@ static char get_iso8859_code(void)
 
 	while (1) {
 		s = get_scan_code();
+
+		if (s)
+			Serial.printf("scan code: %02x\n", s);
+
 		if (!s) return 0;
 		if (s == 0xF0) {
 			state |= BREAK;
@@ -486,7 +490,7 @@ static char get_iso8859_code(void)
 				  case 0x5A: c = PS2_ENTER;       break;
 				  default: break;
 				}
-			} else if ((state & ALTGR) && pgm_read_byte(keymap->uses_altgr)) {
+			} else if ((state & ALTGR) && keymap->uses_altgr) {
 				if (s < PS2_KEYMAP_SIZE)
 					c = pgm_read_byte(keymap->altgr + s);
 			} else if (state & (SHIFT_L | SHIFT_R)) {
@@ -503,6 +507,8 @@ static char get_iso8859_code(void)
 }
 
 bool PS2Keyboard::available() {
+	if (CharBuffer || UTF8next)
+		Serial.printf("CharBuffer: \"%02x\" UTF8next: \"%02x\"\n", CharBuffer, UTF8next);
 	if (CharBuffer || UTF8next) return true;
 	CharBuffer = get_iso8859_code();
 	if (CharBuffer) return true;
